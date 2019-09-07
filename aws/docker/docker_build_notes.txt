@@ -1,0 +1,36 @@
+git clone git@bitbucket.org:transact/bb-cn-ansible.git
+cd /tmp/testdeploy001/bb-cn-ansible
+git checkout deploydev
+git pullb
+
+sh scripts/aws/inventory.sh
+cat inventory.ini
+
+ansible-playbook master.yml -i inventory.ini --extra-vars 'cn_env=ENG1 cn_instance=cntrain code_version=cashnetg build_branch=deploytest artifactory_username=svc.cashnetjenkins artifactory_password=IAP8adlB95!- local_config_dir=/etc/cashnet'
+	er1dhwbr7ap1uub.cdvgmkolqipd.us-east-1.rds.amazonaws.com
+
+cd pgsql_setup/
+	
+	docker run -ti --rm jbergknoff/postgresql-client -U cn_postgres_admin -d postgres -h er1dhwbr7ap1uub.cdvgmkolqipd.us-east-1.rds.amazonaws.com
+	cn_postgres_admin
+	cashnet1234
+
+CREATE DATABASE eng1cntraincashnetg;
+CREATE DATABASE eng1cntraincashneti;
+GRANT ALL PRIVILEGES ON DATABASE eng1cntraincashnetg to cashnet;
+GRANT ALL PRIVILEGES ON DATABASE eng1cntraincashneti to cashnet;
+
+docker stack rm CNG
+
+https://train.cashnut.net/cashnetg/static/epayment/shermertrain/login?eusername=3a3ecd952de4723a99b87d3002c0d1ac
+
+ls -ltra
+
+curl http://10.217.121.209:9991
+
+for x in 8001 8002 9001 9002 9991 9992 ; do echo -e "\n------- $x ------" ;curl http://10.217.121.209:${x} ;  done
+
+
+10.217.121.35:8001/health/index.html
+10.217.121.35:8001/cashnetg/static/health/index.html
+

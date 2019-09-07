@@ -1,0 +1,35 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+
+    "Description": "Amazon EKS Sample VPC",
+
+    "Parameters": {
+    },
+
+    "Resources": {
+        "ControlPlaneSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Cluster communication with worker nodes",
+                "VpcId": "vpc-2fccaf49"
+                }
+          }
+    },
+
+
+    "Outputs": {
+        "SecurityGroups": {
+            "Description": "Security group for the cluster control plane communication with worker nodes",
+            "Value": {
+                "Fn::Join": [
+                    ",",
+                    [
+                        {
+                            "Ref": "ControlPlaneSecurityGroup"
+                        }
+                    ]
+                ]
+            }
+        }
+    }
+}

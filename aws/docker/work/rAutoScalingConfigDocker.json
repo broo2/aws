@@ -1,0 +1,243 @@
+"rAutoScalingConfigDocker": {
+            "Type": "AWS::AutoScaling::LaunchConfiguration",
+			
+			
+            "DependsOn": [
+                "rALBdocker"
+            ],
+            "Metadata": {
+                "AWS::CloudFormation::Authentication": {
+                    "S3AccessCreds": {
+                        "type": "S3",
+                        "roleName": {
+                            "Ref": "pInstanceIAMRole"
+                        },
+                        "buckets": [
+                            "cashnet-configfiles",
+                            "cashnet-software"
+                        ]
+                    }
+                },
+                "AWS::CloudFormation::Init": {
+                    "config": {
+                        "packages": {
+                            "yum": {
+                                "telnet": []
+                            }
+                        },
+                        "files": {
+                            "/etc/cfn/cfn-hup.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[main]\n",
+                                            "stack=",
+                                            {
+                                                "Ref": "AWS::StackId"
+                                            },
+                                            "\n",
+                                            "region=",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[cfn-auto-reloader-hook]\n",
+                                            "triggers=post.update\n",
+                                            "path=Resources.rAutoScalingConfigDocker.Metadata.AWS::CloudFormation::Init\n",
+                                            "action=cfn-init.exe -v -s ",
+                                            {
+                                                "Ref": "AWS::StackId"
+                                            },
+                                            " -r rAutoScalingConfigDocker",
+                                            " --region ",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/install/codedeploy/install": {
+                                "source": {
+                                    "Fn::Sub": "https://aws-codedeploy-${AWS::Region}.s3.amazonaws.com/latest/install"
+                                },
+                                "mode": "000700",
+                                "owner": "root",
+                                "group": "root"
+                            },
+                            "/install/splunkforwarder.rpm": {
+                                "source": "https://cashnet-software.s3.amazonaws.com/splunk/splunkforwarder-6.5.1-f74036626f0c-linux-2.6-x86_64.rpm",
+                                "mode": "000700",
+                                "owner": "root",
+                                "group": "root"
+                            },
+                            "/install/al-agent-LATEST-1.x86_64.rpm": {
+                                "source": "https://cashnet-software.s3.amazonaws.com/alertlogic/al-agent-LATEST-1.x86_64.rpm"
+                            },
+                            "/install/dsa_install.sh": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "#!/usr/bin/env bash \n",
+                                            "wget https://",
+                                            {
+                                                "Fn::ImportValue": {
+                                                    "Fn::Sub": "${pEnvironment}:ELBDeepSec"
+                                                }
+                                            },
+                                            ":443/software/agent/amzn1/x86_64/ -O /tmp/agent.rpm --no-check-certificate --quiet \n",
+                                            "rpm -ihv /tmp/agent.rpm \n",
+                                            "sleep 15 \n",
+                                            "/opt/ds_agent/dsa_control -r \n",
+                                            "/opt/ds_agent/dsa_control -a dsm://",
+                                            {
+                                                "Fn::ImportValue": {
+                                                    "Fn::Sub": "${pEnvironment}:ELBDeepSec"
+                                                }
+                                            },
+                                            ":4120/ \n"
+                                        ]
+                                    ]
+                                },
+                                "mode": "000700",
+                                "owner": "root",
+                                "group": "root"
+                            },
+                            "/install/AWS-PCI.sh": {
+                                "source": "https://cashnet-configfiles.s3.amazonaws.com/linux-hardening/AWS-PCI.sh",
+                                "mode": "000700",
+                                "owner": "root",
+                                "group": "root"
+                            },
+                            "/install/audit_rules.tgz": {
+                                "source": "https://cashnet-configfiles.s3.amazonaws.com/linux-hardening/audit_rules.tgz",
+                                "mode": "000600",
+                                "owner": "root",
+                                "group": "root"
+                            }
+                        },
+                        "commands": {
+                            "05-harden-linux": {
+                                "command": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "/install/AWS-PCI.sh -u ",
+                                            {
+                                                "Fn::ImportValue": {
+                                                    "Fn::Sub": "${pEnvironment}:DomainJoinUser"
+                                                }
+                                            },
+                                            " -p ",
+                                            {
+                                                "Fn::ImportValue": {
+                                                    "Fn::Sub": "${pEnvironment}:DomainJoinPassword"
+                                                }
+                                            },
+                                            " -r Docker",
+                                            " -s ",
+                                            {
+                                                "Ref": "pAppStackName"
+                                            }
+                                        ]
+                                    ]
+                                },
+                                "waitAfterCompletion": "0"
+                            },
+                            "08-install-deep-security": {
+                                "command": "/install/dsa_install.sh",
+                                "waitAfterCompletion": "0"
+                            },
+                            "10-config-docker": {
+                                "command": "/install/config-docker.sh",
+                                "waitAfterCompletion": "0"
+                            },
+                            "30-install-codedeploy-agent": {
+                                "command": "cd /install/codedeploy ; ./install auto",
+                                "waitAfterCompletion": "0"
+                            }
+                        }
+                    }
+                },
+                "AWS::CloudFormation::Designer": {
+                    "id": "3140d31d-64c1-4aa8-bccf-b65d3faa7adf"
+                }
+            },
+            "Properties": {
+                "AssociatePublicIpAddress": "false",
+                "BlockDeviceMappings": [
+                    {
+                        "DeviceName": "/dev/xvda",
+                        "Ebs": {
+                            "VolumeSize": "16"
+                        }
+                    }
+                ],
+                "IamInstanceProfile": {
+                    "Ref": "pInstanceIAMProfile"
+                },
+                "ImageId": {
+                    "Ref": "pLinuxAMI"
+                },
+                "InstanceType": {
+                    "Ref": "pDockerInstanceType"
+                },
+                "KeyName": {
+                    "Ref": "pEC2KeyPair"
+                },
+                "SecurityGroups": [
+                    {
+                        "Ref": "rSGdocker"
+                    },
+                    {
+                        "Fn::ImportValue": {
+                            "Fn::Sub": "${pEnvironment}:SGfileshareaccess"
+                        }
+                    },
+                    {
+                        "Fn::ImportValue": {
+                            "Fn::Sub": "${pEnvironment}:SG000"
+                        }
+                    },
+                    {
+                        "Fn::ImportValue": {
+                            "Fn::Sub": "${pEnvironment}:SGdomainmember"
+                        }
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "#!/bin/bash\n",
+                                "yum update -y aws-cfn-bootstrap\n",
+                                "/opt/aws/bin/cfn-init -v ",
+                                "         --stack ",
+                                {
+                                    "Ref": "AWS::StackName"
+                                },
+                                "         --resource rAutoScalingConfigDocker ",
+                                "         --region ",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\n"
+                            ]
+                        ]
+                    }
+                }
+            }
+        },
