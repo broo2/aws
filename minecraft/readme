@@ -1,0 +1,3 @@
+json file for use with AWS cloudformation.
+creates an EC2 linux instance based on supplied instacne size and ID.  defaults to free tier t2.micro
+runs mc2.sh script from s3:\\minecraft009 to build minecraft server

@@ -1,0 +1,67 @@
+{
+                "Scheme": "internal",
+                "SecurityGroups": [
+                    {
+                        "Ref": "rSGdockerELB"
+                    },
+                    {
+                        "Fn::ImportValue": {
+                            "Fn::Sub": "${pEnvironment}:SG000"
+                        }
+                    }
+                ],
+                "Subnets": [
+                    {
+                        "Ref": "pSubnetA"
+                    },
+                    {
+                        "Ref": "pSubnetB"
+                    }
+                ],
+                "LoadBalancerAttributes": [
+                    {
+                        "Key": "access_logs.s3.enabled",
+                        "Value": "false"
+                    },
+                    {
+                        "Key": "access_logs.s3.bucket",
+                        "Value": {
+                            "Fn::ImportValue": {
+                                "Fn::Sub": "${pEnvironment}:S3ELBAccessLogs"
+                            }
+                        }
+                    },
+                    {
+                        "Key": "access_logs.s3.prefix",
+                        "Value": "Logs"
+                    },
+                    {
+                        "Key": "idle_timeout.timeout_seconds",
+                        "Value": "210"
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "${pFriendlyName} Docker ALB"
+                        }
+                    },
+                    {
+                        "Key": "Role",
+                        "Value": "Docker"
+                    },
+                    {
+                        "Key": "AppStack",
+                        "Value": {
+                            "Ref": "pAppStackName"
+                        }
+                    },
+                    {
+                        "Key": "Environment",
+                        "Value": {
+                            "Ref": "pEnvironment"
+                        }
+                    }
+                ]
+            }

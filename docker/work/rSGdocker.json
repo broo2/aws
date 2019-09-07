@@ -1,0 +1,45 @@
+"Properties": {
+                "GroupDescription": "Security group for docker servers",
+                "VpcId": {
+                    "Ref": "pProductionVPC"
+                },
+                "SecurityGroupEgress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "IpProtocol": "6",
+                        "FromPort": "7946",
+                        "ToPort": "7946"
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "IpProtocol": "17",
+                        "FromPort": "7946",
+                        "ToPort": "7946"
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "IpProtocol": "17",
+                        "FromPort": "4789",
+                        "ToPort": "4789"
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Sub": "${pFriendlyName} SGdocker"
+                        }
+                    },
+                    {
+                        "Key": "AppStack",
+                        "Value": {
+                            "Ref": "pAppStackName"
+                        }
+                    },
+                    {
+                        "Key": "Environment",
+                        "Value": {
+                            "Ref": "pEnvironment"
+                        }
+                    }
+                ]

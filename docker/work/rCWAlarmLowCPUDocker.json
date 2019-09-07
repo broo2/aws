@@ -1,0 +1,24 @@
+			"DependsOn": "rAutoScalingGroupDocker",
+            "Properties": {
+                "EvaluationPeriods": "1",
+                "Statistic": "Average",
+                "Threshold": "15",
+                "AlarmDescription": "Alarm if CPU too too, remove a webserver",
+                "Period": "300",
+                "AlarmActions": [
+                    {
+                        "Ref": "rAutoScalingDownDocker"
+                    }
+                ],
+                "Namespace": "AWS/EC2",
+                "Dimensions": [
+                    {
+                        "Name": "AutoScalingGroupName",
+                        "Value": {
+                            "Ref": "rAutoScalingGroupDocker"
+                        }
+                    }
+                ],
+                "ComparisonOperator": "LessThanThreshold",
+                "MetricName": "CPUUtilization"
+            }

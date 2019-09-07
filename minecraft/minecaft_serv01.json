@@ -1,0 +1,169 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+
+    "Description": "Version 3.2 revised on 2017-08-25",
+
+    "Metadata":{
+        "AWS::CloudFormation::Interface":{
+            "ParameterGroups":[
+                {"Label":
+                  {
+                  "default":"Instance Settings:"
+                  },
+                "Parameters":
+                  [
+                  "AWSImage",
+                  "AWSSize"
+                  ]
+                },
+                {"Label":
+                  {
+                  "default":"IAM Settings:"
+                  },
+                "Parameters":
+                  [
+                  "KeyName"
+                  ]
+                },
+                {"Label":
+                  {
+                  "default":"Minecraft Files:"
+                  },
+                "Parameters":
+                  [
+                  "MCServerJar"
+                  ]
+                }
+              ]
+          }
+      },
+
+
+    "Parameters": {
+        "KeyName": {
+            "Description": "Name of an existing EC2 KeyPair to enable SSH access to the instance",
+            "Type": "AWS::EC2::KeyPair::KeyName",
+            "ConstraintDescription": "must be the name of an existing EC2 KeyPair."
+        },
+
+        "AWSImage": {
+    			"Description": "AWS ImageID",
+    			"Type": "String",
+    			"Default": "ami-0d8f6eb4f641ef691"
+    		},
+        "AWSSize": {
+          "Description": "AWS Image size",
+          "Type": "String",
+          "Default": "t2.micro"
+        },
+        "MCServerJar": {
+          "Description": "URL for Minecraft Serve wget",
+          "Type": "String",
+          "Default": "https://launcher.mojang.com/v1/objects/3dc3d84a581f14691199cf6831b71ed1296a9fdf/server.jar"
+        }
+
+
+    },
+
+    "Resources": {
+        "ec2MineCraft": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+				"InstanceType" : { "Ref": "AWSSize" },
+				"ImageId" : { "Ref": "AWSImage" },
+                "SecurityGroups": [{ "Ref": "SGMineCraft" }],
+                "KeyName" : { "Ref": "KeyName" },
+
+				"UserData"  : { "Fn::Base64" : { "Fn::Join" : ["", [
+				      "#!/bin/bash -xe\n",
+				      "yum update -y\n",
+					    "yum install -y java-1.8.0-openjdk-headless.x86_64\n",
+
+              "mkdir /opt/minecraft\n",
+              "cd /opt/minecraft\n",
+              "echo eula=true > ./eula.txt\n",
+
+              "wget ", { "Ref": "MCServerJar" }, " -O /opt/minecraft/server.jar\n",
+              "chmod +x /opt/minecraft/server.jar\n",
+
+              "java -Xmx768M -Xms768M -jar server.jar nogui\n"
+			 	    ]]}}
+				   }
+			   },
+
+        "SGMineCraft": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Enable SSH access via port 22, Minecraft via 25565, and DynaMap web on 8123",
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "22",
+                        "ToPort": "22",
+                        "CidrIp": "0.0.0.0/0"
+					},
+					                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "8123",
+                        "ToPort": "8123",
+                        "CidrIp": "0.0.0.0/0"
+					},
+				    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "25565",
+                        "ToPort": "25565",
+                        "CidrIp": "0.0.0.0/0"
+					},
+          {
+                      "IpProtocol": "tcp",
+                      "FromPort": "80",
+                      "ToPort": "80",
+                      "CidrIp": "0.0.0.0/0"
+        },
+        {
+                    "IpProtocol": "tcp",
+                    "FromPort": "443",
+                    "ToPort": "443",
+                    "CidrIp": "0.0.0.0/0"
+      }
+                ]
+            }
+        }
+	},
+
+	"Outputs": {
+        "InstanceId": {
+            "Description": "InstanceId of the newly created EC2 instance",
+            "Value": {
+                "Ref": "ec2MineCraft"
+            }
+        },
+        "AZ": {
+            "Description": "Availability Zone of the newly created EC2 instance",
+            "Value": {
+                "Fn::GetAtt": [
+                    "ec2MineCraft",
+                    "AvailabilityZone"
+                ]
+            }
+        },
+        "PublicDNS": {
+            "Description": "Public DNSName of the newly created EC2 instance",
+            "Value": {
+                "Fn::GetAtt": [
+                    "ec2MineCraft",
+                    "PublicDnsName"
+                ]
+            }
+        },
+        "PublicIP": {
+            "Description": "Public IP address of the newly created EC2 instance",
+            "Value": {
+                "Fn::GetAtt": [
+                    "ec2MineCraft",
+                    "PublicIp"
+                ]
+            }
+        }
+    }
+}

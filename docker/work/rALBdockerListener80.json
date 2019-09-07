@@ -1,0 +1,15 @@
+{
+                "DefaultActions": [
+                    {
+                        "Type": "forward",
+                        "TargetGroupArn": {
+                            "Ref": "rALBdockerTarget80"
+                        }
+                    }
+                ],
+                "LoadBalancerArn": {
+                    "Ref": "rALBdocker"
+                },
+                "Port": 80,
+                "Protocol": "HTTP"
+            }
