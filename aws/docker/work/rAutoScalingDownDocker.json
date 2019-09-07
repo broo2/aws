@@ -1,8 +1,0 @@
-{
-                "AdjustmentType": "ChangeInCapacity",
-                "AutoScalingGroupName": {
-                    "Ref": "rAutoScalingGroupDocker"
-                },
-                "Cooldown": "500",
-                "ScalingAdjustment": "-1"
-            }
